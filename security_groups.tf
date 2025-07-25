@@ -40,3 +40,19 @@ resource "aws_security_group" "webapp_ssh_inbound_sg" {
 
   tags = local.common_tags
 }
+
+resource "aws_security_group" "webapp_outbound_sg" {
+  name        = "${local.name_prefix}-webapp-outbound"
+  description = "Allow outbound connections"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  vpc_id = data.tfe_outputs.networking.nonsensitive_values.vpc_id
+
+  tags = local.common_tags
+}
