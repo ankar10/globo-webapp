@@ -11,14 +11,12 @@ provider "aws" {
 ##################################################################################
 
 locals {
-
   common_tags = {
     Environment = var.environment
     BillingCode = var.billing_code
   }
 
   name_prefix = "${var.prefix}-${var.environment}"
-
 }
 
 ##################################################################################
@@ -35,11 +33,10 @@ resource "aws_instance" "main" {
     aws_security_group.webapp_ssh_inbound_sg.id,
     aws_security_group.webapp_outbound_sg.id,
   ]
-
   key_name = module.ssh_keys.key_pair_name
 
   tags = merge(local.common_tags, {
-    "Name" = "${local.name_prefix}-webapp-${count.index}"
+    Name = "${local.name_prefix}-webapp-${count.index}"
   })
 
   user_data_replace_on_change = true
@@ -55,21 +52,21 @@ resource "terraform_data" "webapp" {
     join(",", aws_instance.main.*.id)
   ]
 
-provisioner "file" {
-  content = templatefile("./templates/application.config.tpl", {
-    hosts     = aws_instance.main.*.private_dns
-    site_name = "${local.name_prefix}-taco-wagon"
-    api_key   = var.api_key
-  })
-  destination = "/home/ec2-user/application.config"
-}
+  provisioner "file" {
+    content = templatefile("./templates/application.config.tpl", {
+      hosts     = aws_instance.main.*.private_dns
+      site_name = "${local.name_prefix}-taco-wagon"
+      api_key   = var.api_key
+    })
+    destination = "/home/ec2-user/application.config"
+  }
 
-connection {
-  type        = "ssh"
-  user        = "ec2-user"
-  port        = "22"
-  host        = aws_instance.main[0].public_ip
-  private_key = module.ssh_keys.private_key_openssh
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    port        = "22"
+    host        = aws_instance.main[0].public_ip
+    private_key = module.ssh_keys.private_key_openssh
   }
 }
 
